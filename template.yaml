@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Task Manager API
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment for this deployment
+
+Conditions:
+  IsDev: !Equals
+    - !Ref Environment
+    - dev
+
+Globals:
+  Function:
+    MemorySize: 512
+    Runtime: python3.12
+    Timeout: 30
+    Environment:
+      Variables:
+        PYTHONPATH: /var/task/src
+        ENVIRONMENT: !Ref Environment
+        DATABASE_PATH: /tmp/task_manager.db
+
+Resources:
+  # API Gateway
+  TaskManagerApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub '${Environment}-task-manager-api'
+      StageName: !Ref Environment
+      Description: API para gerenciamento de tarefas
+      EndpointConfiguration:
+        Type: REGIONAL
+
+  # Lambda Function - Create User
+  CreateUserFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub '${Environment}-task-manager-create-user'
+      CodeUri: .
+      Handler: src.handlers.users.handler
+      Description: Função para criar usuários
+      Environment:
+        Variables:
+          APP_NAME: create-user
+      Events:
+        CreateUser:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TaskManagerApi
+            Path: /users
+            Method: post
+
+Outputs:
+  TaskManagerApiUrl:
+    Description: 'URL da API Gateway'
+    Value: !Sub 'https://${TaskManagerApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
+    
+  CreateUserApi:
+    Description: 'URL do endpoint para criar usuários'
+    Value: !Sub 'https://${TaskManagerApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/users'
