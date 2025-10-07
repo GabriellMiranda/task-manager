@@ -13,9 +13,7 @@ Parameters:
     Description: Environment for this deployment
 
 Conditions:
-  IsDev: !Equals
-    - !Ref Environment
-    - dev
+  IsDev: !Equals [!Ref Environment, dev]
 
 Globals:
   Function:
@@ -73,9 +71,9 @@ Resources:
 
 Outputs:
   TaskManagerApiUrl:
-    Description: 'URL da API Gateway'
-    Value: !Sub 'https://${TaskManagerApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}'
-    
+    Description: 'URL base da API Gateway'
+    Value: !Sub 'https://${TaskManagerApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/'
+
   CreateUserApi:
-    Description: 'URL do endpoint para criar usuários'
+    Description: 'Endpoint para criar usuários'
     Value: !Sub 'https://${TaskManagerApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/users'

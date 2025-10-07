@@ -1,12 +1,15 @@
-
+import json
 from common.services.users_service import UsersService
 from common.schemas.users_schema import UserSchema
 
 
 def handler(event, context):
     try:
+        # Extrair dados do body do evento do API Gateway
+        body = json.loads(event.get('body', '{}'))
+        
         users_service = UsersService()
-        user_data = UserSchema(**event)
+        user_data = UserSchema(**body)
         user_id = users_service.create_user(user_data.model_dump())
         
         return {
@@ -14,10 +17,10 @@ def handler(event, context):
             "headers": {
                 "Content-Type": "application/json"
             },
-            "body": {
+            "body": json.dumps({
                 "user_id": user_id,
                 "message": "Usuário criado com sucesso"
-            }
+            })
         }
     except Exception as e:
         return {
@@ -25,9 +28,9 @@ def handler(event, context):
             "headers": {
                 "Content-Type": "application/json"
             },
-            "body": {
+            "body": json.dumps({
                 "error": str(e)
-            }
+            })
         }
 
 if __name__ == "__main__":
