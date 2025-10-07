@@ -24,11 +24,22 @@ Globals:
     Timeout: 30
     Environment:
       Variables:
-        PYTHONPATH: /var/task/src
+        PYTHONPATH: /opt/python:/var/task/src
         ENVIRONMENT: !Ref Environment
         DATABASE_PATH: /tmp/task_manager.db
 
 Resources:
+  # Layer Common
+  CommonLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub '${Environment}-task-manager-common'
+      Description: Layer com código comum do projeto
+      ContentUri: src/layers/common/
+      CompatibleRuntimes:
+        - python3.12
+      RetentionPolicy: Retain
+
   # API Gateway
   TaskManagerApi:
     Type: AWS::Serverless::Api
@@ -45,8 +56,10 @@ Resources:
     Properties:
       FunctionName: !Sub '${Environment}-task-manager-create-user'
       CodeUri: .
-      Handler: src.handlers.users.handler
+      Handler: src.functions.users.handler
       Description: Função para criar usuários
+      Layers:
+        - !Ref CommonLayer
       Environment:
         Variables:
           APP_NAME: create-user
